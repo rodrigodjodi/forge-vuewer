@@ -3,8 +3,10 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=no" >
     <link rel="shortcut icon" href="<%= webpackConfig.output.publicPath %>favicon.ico">
+    <link rel="stylesheet" type="text/css"
+      href="https://developer.api.autodesk.com/modelderivative/v2/viewers/style.min.css" >
     <title>forge-vuewer</title>
   </head>
   <body>
@@ -13,5 +15,7 @@
     </noscript>
     <div id="app"></div>
     <!-- built files will be auto injected -->
+    <script src="https://developer.api.autodesk.com/modelderivative/v2/viewers/three.min.js"></script>
+	<script src="https://developer.api.autodesk.com/modelderivative/v2/viewers/viewer3D.min.js"></script>
   </body>
 </html>
