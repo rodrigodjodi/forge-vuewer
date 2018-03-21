@@ -1,11 +1,11 @@
 <template>
-  <div id="MyViewerDiv"></div>
+  <div id="forgeViewer"></div>
 </template>
 <script>
 /* global Autodesk:false */
 import axios from "axios";
 
-var viewer;
+var viewerApp;
 export default {
   data() {
     return {
@@ -22,69 +22,52 @@ export default {
   },
   methods: {
     getForgeToken(callback) {
-      /*const config = {
-        method: "post",
-        url:
-          "https://developer.api.autodesk.com/authentication/v1/authenticate",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded"
-          //"Access-Control-Allow-Origin" : "*"
-          //"Cache-Control": "no-cache"
-        },
-        data:
-          "grant_type=client_credentials&client_id=KiBrx6pRDrpUVB4ELA3zJj3PAh99REug&client_secret=Tx1eeUPGeCCt9P7g&scope=viewables%3Aread"
-      };
-      axios(config)
+      axios('/api/forge/oauth/token')
         .then(response => {
-          console.log(response);*/
-          let token = "eyJhbGciOiJIUzI1NiIsImtpZCI6Imp3dF9zeW1tZXRyaWNfa2V5In0.eyJjbGllbnRfaWQiOiJLaUJyeDZwUkRycFVWQjRFTEEzekpqM1BBaDk5UkV1ZyIsImV4cCI6MTUyMTQyMDEzOCwic2NvcGUiOlsidmlld2FibGVzOnJlYWQiXSwiYXVkIjoiaHR0cHM6Ly9hdXRvZGVzay5jb20vYXVkL2p3dGV4cDYwIiwianRpIjoic3poQmlWMmo3aXpOTDdmZ1VDd3VhOWtHcEFiUkJiczdBbXMyZ3hFUlpqNldNS3FBWjNnbENkdG9kOTE2OXVwMiJ9.CEscAyGLJHpEbVaHB8PxzW3u3uiU9tMYXoSOS6gifpw"
-          let expire = 3599;
+          let token = response.data.access_token
+          let expire = response.data.expires_in;
           callback(token, expire);
-        /*})
+        })
         .catch(err => {
           console.error("Erro response: " + err);
-        });*/
+        });
     },
     onInitialized() {
       console.log("initialized");
-      Autodesk.Viewing.Document.load(
+      viewerApp = new Autodesk.Viewing.ViewingApplication('forgeViewer');
+      viewerApp.registerViewer(
+        viewerApp.k3D,
+        Autodesk.Viewing.Private.GuiViewer3D
+      );
+      console.log('pre-load document')
+      viewerApp.loadDocument(
         this.documentId,
         this.onDocumentLoadSuccess,
         this.onDocumentLoadFailure
       );
     },
+    
     onDocumentLoadSuccess(doc) {
-      var viewables = Autodesk.Viewing.Document.getSubItemsWithProperties(
-        doc.getRootItem(),
-        { type: "geometry" },
-        true
-      );
+      var viewables = viewerApp.bubble.search({ 'type': 'geometry' });
       if (viewables.length === 0) {
-        console.error("Document contains no viewables.");
+        console.error('Document contains no viewables.');
         return;
       }
-      var initialViewable = viewables[0];
-      var svfUrl = doc.getViewablePath(initialViewable);
-      var modelOptions = {
-        sharedPropertyDbPath: doc.getPropertyDbPath()
-      };
-      var viewerDiv = document.getElementById("MyViewerDiv");
-      viewer = new Autodesk.Viewing.Private.GuiViewer3D(viewerDiv);
-      viewer.start(
-        svfUrl,
-        modelOptions,
-        this.onLoadModelSuccess,
-        this.onLoadModelError
+      // Choose any of the avialble viewables
+      viewerApp.selectItem(
+        viewables[0].data,
+        this.onItemLoadSuccess,
+        this.onItemLoadFail
       );
     },
     onDocumentLoadFailure(viewerErrorCode) {
       console.error("onDocumentLoadFailure() - errorCode:" + viewerErrorCode);
     },
-    onLoadModelSuccess(model) {
-      console.log("Validate model loaded: " + (viewer.model === model));
+    onItemLoadSuccess(viewer, item) {
+      console.log('Model loaded');
     },
-    onLoadModelError(viewerErrorCode) {
-      console.error("onLoadModelError() - errorCode:" + viewerErrorCode);
+    onItemLoadFail(errorCode) {
+      console.error('onItemLoadFail() - errorCode:' + errorCode);
     }
   },
 
@@ -92,7 +75,7 @@ export default {
 };
 </script>
 <style>
-#MyViewerDiv {
+#forgeViewer {
   position: relative;
   width: 100%;
   height: 600px;
