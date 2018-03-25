@@ -6,6 +6,7 @@
 import axios from "axios";
 
 var viewerApp;
+
 export default {
   data() {
     return {
@@ -22,9 +23,9 @@ export default {
   },
   methods: {
     getForgeToken(callback) {
-      axios('/api/forge/oauth/token')
+      axios("/api/forge/oauth/token")
         .then(response => {
-          let token = response.data.access_token
+          let token = response.data.access_token;
           let expire = response.data.expires_in;
           callback(token, expire);
         })
@@ -34,23 +35,22 @@ export default {
     },
     onInitialized() {
       console.log("initialized");
-      viewerApp = new Autodesk.Viewing.ViewingApplication('forgeViewer');
+      viewerApp = new Autodesk.Viewing.ViewingApplication("forgeViewer");
       viewerApp.registerViewer(
         viewerApp.k3D,
         Autodesk.Viewing.Private.GuiViewer3D
       );
-      console.log('pre-load document')
+      console.log("pre-load document");
       viewerApp.loadDocument(
         this.documentId,
         this.onDocumentLoadSuccess,
         this.onDocumentLoadFailure
       );
     },
-    
     onDocumentLoadSuccess(doc) {
-      var viewables = viewerApp.bubble.search({ 'type': 'geometry' });
+      var viewables = viewerApp.bubble.search({ type: "geometry" });
       if (viewables.length === 0) {
-        console.error('Document contains no viewables.');
+        console.error("Document contains no viewables.");
         return;
       }
       // Choose any of the avialble viewables
@@ -64,10 +64,10 @@ export default {
       console.error("onDocumentLoadFailure() - errorCode:" + viewerErrorCode);
     },
     onItemLoadSuccess(viewer, item) {
-      console.log('Model loaded');
+      console.log("Model loaded");
     },
     onItemLoadFail(errorCode) {
-      console.error('onItemLoadFail() - errorCode:' + errorCode);
+      console.error("onItemLoadFail() - errorCode:" + errorCode);
     }
   },
 
