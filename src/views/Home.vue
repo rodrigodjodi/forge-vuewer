@@ -1,11 +1,19 @@
 <template>
   <div class="home">
+    <select v-model="docId" name="scenes" id="scenes">
+      <option v-for="scene in scenes" :key="scene.name" :value="scene.urn">
+        {{scene.name}}
+      </option>
+    </select>
+    <select name="items" id="items" @input="changeItem">
+      <option v-for="(viewable, index) in viewables" :key="viewable.id" :value="index">
+        {{viewable.data.name}}
+      </option>
+    </select>
     <Viewer 
       :documentId="docId"
     ></Viewer>
-    <button @click="docId='urn:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6YnJpZ2FkZWlyby9BUFRPX0RFQ09SQURPX0JSR19SMTcuZHdmeA'">
-      Apartamento
-    </button>
+    
   </div>
 </template>
 
@@ -18,9 +26,27 @@ export default {
   components: {
     Viewer
   },
-  data () {
+  data() {
     return {
-      docId: "urn:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6dXJiYW5lbmdlL1VSQkFORU5HRS1SMi5kd2Z4"
+      docId: "",
+      viewItem: 0
+    };
+  },
+  computed: {
+    scenes() {
+      return this.$store.state.scenes;
+    },
+    viewables() {
+      return this.$store.state.viewer.viewables;
+    }
+  },
+  mounted() {
+    this.docId = this.$store.state.scenes[0].urn;
+    this.viewItem = this.$store.state.viewer.itemIndex;
+  },
+  methods: {
+    changeItem(val) {
+      this.$store.commit("changeItem", val.target.value);
     }
   }
 };

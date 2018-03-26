@@ -6,7 +6,6 @@
 import axios from "axios";
 
 var viewerApp;
-
 export default {
   props: {
     documentId: {
@@ -22,18 +21,20 @@ export default {
       }
     };
   },
+  computed: {
+    viewables() {
+      return this.$store.state.viewer.viewables;
+    },
+    item() {
+      return this.$store.state.viewer.itemIndex;
+    }
+  },
   created() {
     Autodesk.Viewing.Initializer(this.options, this.onInitialized);
   },
   watch: {
-    documentId (val) {
-      console.log("urn changed to " + val);
-      viewerApp.loadDocument(
-        this.documentId,
-        this.onDocumentLoadSuccess,
-        this.onDocumentLoadFailure
-      );
-    }
+    documentId: "loadDocument",
+    item: "selectItem"
   },
   methods: {
     getForgeToken(callback) {
@@ -52,9 +53,11 @@ export default {
       viewerApp = new Autodesk.Viewing.ViewingApplication("forgeViewer");
       viewerApp.registerViewer(
         viewerApp.k3D,
-        Autodesk.Viewing.Private.GuiViewer3D
+        Autodesk.Viewing.Viewer3D //use Autodesk.Viewing.Private.GuiViewer3D for interface
       );
-      console.log("pre-load document");
+      this.loadDocument();
+    },
+    loadDocument() {
       viewerApp.loadDocument(
         this.documentId,
         this.onDocumentLoadSuccess,
@@ -62,15 +65,18 @@ export default {
       );
     },
     onDocumentLoadSuccess(doc) {
-      var viewables = viewerApp.bubble.search({ type: "geometry" });
-      console.log(viewables.length);
-      if (viewables.length === 0) {
+      let modelNodes = viewerApp.bubble.search(av.BubbleNode.MODEL_NODE); // 3D designs
+      let sheetNodes = viewerApp.bubble.search(av.BubbleNode.SHEET_NODE); // 2D designs
+      this.$store.commit("docLoad", modelNodes.concat(sheetNodes));
+      if (this.viewables.length === 0) {
         console.error("Document contains no viewables.");
         return;
       }
-      // Choose any of the avialble viewables
+      this.selectItem(this.item);
+    },
+    selectItem(item) {
       viewerApp.selectItem(
-        viewables[0].data,
+        this.viewables[item].data,
         this.onItemLoadSuccess,
         this.onItemLoadFail
       );
@@ -80,6 +86,7 @@ export default {
     },
     onItemLoadSuccess(viewer, item) {
       console.log("Model loaded");
+      console.log(item);
     },
     onItemLoadFail(errorCode) {
       console.error("onItemLoadFail() - errorCode:" + errorCode);
