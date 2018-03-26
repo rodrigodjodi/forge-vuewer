@@ -8,10 +8,14 @@ import axios from "axios";
 var viewerApp;
 
 export default {
+  props: {
+    documentId: {
+      type: String,
+      required: true
+    }
+  },
   data() {
     return {
-      documentId:
-        "urn:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6dXJiYW5lbmdlL1VSQkFORU5HRS1SMi5kd2Z4",
       options: {
         env: "AutodeskProduction",
         getAccessToken: this.getForgeToken
@@ -20,6 +24,16 @@ export default {
   },
   created() {
     Autodesk.Viewing.Initializer(this.options, this.onInitialized);
+  },
+  watch: {
+    documentId (val) {
+      console.log("urn changed to " + val);
+      viewerApp.loadDocument(
+        this.documentId,
+        this.onDocumentLoadSuccess,
+        this.onDocumentLoadFailure
+      );
+    }
   },
   methods: {
     getForgeToken(callback) {
@@ -49,6 +63,7 @@ export default {
     },
     onDocumentLoadSuccess(doc) {
       var viewables = viewerApp.bubble.search({ type: "geometry" });
+      console.log(viewables.length);
       if (viewables.length === 0) {
         console.error("Document contains no viewables.");
         return;
